@@ -2,18 +2,35 @@
 
 <PageTitle>BlazorExcelViewer</PageTitle>
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<Layout Class="layout">
+    <Header>
+        <div class="logo" />
+        <Menu Theme="MenuTheme.Dark" Mode="MenuMode.Horizontal" DefaultSelectedKeys=@(new[]{"1"})>
+            <MenuItem Key="1" RouterLink="/">Home</MenuItem>
+            <MenuItem Key="2" RouterLink="/upload">File Upload</MenuItem>
+            <MenuItem Key="3" RouterLink="/excelviewer">Blazor Excel Viewer</MenuItem>
+        </Menu>
+    </Header>
+    <Content Style="padding: 0 50px;">
+        <Breadcrumb Style="margin: 16px 0;">
+            <BreadcrumbItem Href="/"><Icon Type="home" />Home</BreadcrumbItem>
+        </Breadcrumb>
+        <div class="site-layout-content">@Body</div>
+    </Content>
+    <Footer Style="text-align: center; ">Blazor Excel Viewer ©2022 Created by Ricky Liu</Footer>
+</Layout>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+<style>
+    .site-layout-content {
+        background: #fff;
+        padding: 24px;
+        min-height: 280px;
+    }
+    #components-layout-demo-top .logo {
+        width: 120px;
+        height: 31px;
+        background: rgba(255, 255, 255, 0.2);
+        margin: 16px 24px 16px 0;
+        float: left;
+    }
+</style>
