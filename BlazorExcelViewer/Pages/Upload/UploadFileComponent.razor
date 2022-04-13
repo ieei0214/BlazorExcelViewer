@@ -1,0 +1,148 @@
+﻿@inject IWebHostEnvironment Environment
+@inject MessageService MsgService
+
+<h3>Upload Files</h3>
+
+<p>
+    <label>
+        Max file size:
+        <input type="number" @bind="MaxFileSize"/>
+    </label>
+</p>
+
+<p>
+    <label>
+        Max allowed files:
+        <input type="number" @bind="MaxAllowedFiles"/>
+    </label>
+</p>
+
+<p>
+    <label>
+        <InputFile OnChange="@LoadFiles" multiple/>
+    </label>
+</p>
+@if (_isLoading)
+{
+    <p>Uploading...</p>
+}
+else
+{
+    <ul>
+        @foreach (var file in _loadedFiles)
+        {
+            <li>
+                <ul>
+                    <li>Name: @file.Name</li>
+                    <li>Last modified: @file.LastModified.ToString()</li>
+                    <li>Size (bytes): @file.Size</li>
+                    <li>Content type: @file.ContentType</li>
+                </ul>
+            </li>
+        }
+    </ul>
+}
+<br/>
+<h3>Files</h3>
+<ul>
+    @foreach (var url in FileUrls)
+    {
+        <li>
+            <a href="@url">@url</a><br/>
+        </li>
+    }
+</ul>
+<br/>
+
+<Button Disabled="@_isProcess" OnClick="OnProcess">Submit</Button>
+
+@code {
+
+    [Parameter]
+    public long MaxFileSize { get; set; }
+
+    [Parameter]
+    public int MaxAllowedFiles { get; set; }
+
+    [Parameter]
+    public string UploadPath
+    {
+        get => _uploadpath;
+        set => _uploadpath = Path.Combine(Environment.ContentRootPath, Environment.EnvironmentName, value);
+    }
+
+    [Parameter]
+    public EventCallback<List<string>> OnProcessCallback { get; set; }
+
+    readonly List<string> FileUrls = new();
+
+    private bool _isLoading;
+    private bool _isProcess;
+    private readonly List<IBrowserFile> _loadedFiles = new();
+    private string _uploadpath;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ListFiles();
+    }
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        _isLoading = true;
+        _loadedFiles.Clear();
+
+        foreach (var file in e.GetMultipleFiles(MaxAllowedFiles))
+        {
+            try
+            {
+                _loadedFiles.Add(file);
+
+                if (Directory.Exists(UploadPath))
+                    Directory.Delete(UploadPath, true);
+                Directory.CreateDirectory(UploadPath);
+
+                var path = Path.Combine(UploadPath,
+                    file.Name);
+
+                await using FileStream fs = new(path, FileMode.Create);
+                await file.OpenReadStream(MaxFileSize).CopyToAsync(fs);
+                fs.Close();
+                await ListFiles();
+            }
+            catch (Exception ex)
+            {
+                await MsgService.Error(ex.ToString());
+                throw;
+            }
+        }
+        _isLoading = false;
+        await MsgService.Success("File Upload Success");
+    }
+
+    async Task ListFiles()
+    {
+        try
+        {
+            FileUrls.Clear();
+            var files = Directory.GetFiles(UploadPath, "*.*");
+            foreach (var filename in files)
+            {
+                FileUrls.Add(filename);
+            }
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            await MsgService.Error(ex.ToString());
+            throw;
+        }
+    }
+
+    private async Task OnProcess()
+    {
+        _isProcess = true;
+        await OnProcessCallback.InvokeAsync(FileUrls);
+        _isProcess = false;
+    }
+
+}

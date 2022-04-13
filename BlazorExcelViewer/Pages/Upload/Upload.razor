@@ -1,4 +1,21 @@
 ﻿@page "/upload"
+@inject NavigationManager NavManager
 
 <PageTitle>Upload Excel File</PageTitle>
 
+<UploadFileComponent
+    @ref="_ufc"
+    MaxFileSize="1024*100000" 
+    MaxAllowedFiles="1" 
+    UploadPath ="upload"
+    OnProcessCallback="OnProcessCB"
+/>
+
+@code {
+    private UploadFileComponent _ufc;
+
+    private void OnProcessCB()
+    {
+          NavManager.NavigateTo("/excelviewer");
+    }
+}
