@@ -1,0 +1,51 @@
+﻿@using System.Data
+<PageTitle>Blazor Excel Viewer</PageTitle>
+
+@if (_isLoading)
+{
+    <Spin/>
+}
+else
+{
+    <div>
+        <Tabs DefaultActiveKey="0" TabPosition="TabPosition.Top">
+            @foreach (var sheet in _sheets.Select((value, index) => new { value, index }))
+            {
+                <TabPane Key="@sheet.index.ToString()" Tab="@sheet.value">
+                    <Table DataSource="_dataTables[sheet.index].AsEnumerable().ToArray()" Bordered="true">
+                        @foreach (DataColumn column in _dataTables[sheet.index].Columns)
+                        {
+                            <Column TData="object" Title="@column.ColumnName" DataIndex=@($"['{column.ColumnName}']")></Column>
+                        }
+                    </Table>
+                </TabPane>
+            }
+        </Tabs>
+
+
+    </div>
+}
+
+@code
+{
+    [Parameter]
+    public string Filename { get; set; }
+
+    NPOIHelper _excelHelper;
+    List<DataTable> _dataTables;
+    List<string> _sheets;
+    bool _isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isLoading = true;
+        await Task.Run(() =>
+        {
+            _excelHelper = new NPOIHelper(Filename);
+            _excelHelper.Run();
+            _sheets = _excelHelper.GetSheet();
+            _dataTables = _excelHelper.DataTables;
+        });
+        _isLoading = false;
+    }
+}

@@ -1,0 +1,33 @@
+﻿@page "/viewer"
+@inject NavigationManager NavManager
+
+
+@if (!IsShowViewer)
+{
+    <PageTitle>Upload Excel File</PageTitle>
+
+    <UploadFileComponent
+        MaxFileSize="1024 * 100000"
+        MaxAllowedFiles="1"
+        UploadPath=""
+        OnProcessCallback="OnProcessCB"/>
+}
+else
+{
+    <PageTitle>Blazor Excel Viewer</PageTitle>
+
+    <BlazorExcelviewerComponent Filename="@Files[0]"/>
+}
+
+@code {
+
+    private bool IsShowViewer;
+    private List<string> Files = new();
+
+    private void OnProcessCB(List<string> files)
+    {
+        Files = files;
+        IsShowViewer = true;
+    }
+
+}
